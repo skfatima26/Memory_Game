@@ -71,3 +71,765 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Jenkins 
+Q1. Consider a given Java project and create a GitHub pipeline to demonstrate clean package.
+Step 1 — Create Java Project Structure
+# Create main project folder
+mkdir java
+cd java
+
+# Create basic Java package structure
+mkdir -p src/main/java/com/example
+Create Main.java:
+src/main/java/com/example/Main.java
+package com.example;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, GitHub Actions Java CI!");
+    }
+}
+Save → Ctrl+O → Enter → Ctrl+X
+
+Step 2 — Create Maven pom.xml
+pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>java-demo</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <source>17</source>
+          <target>17</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+Save → Ctrl+O → Enter → Ctrl+X
+
+Step 3 — Create GitHub Actions Workflow
+# Go back to repo root
+cd ..
+# Create workflows folder
+mkdir -p .github/workflows
+nano .github/workflows/java-build.yml
+Paste workflow YAML:
+name: Java CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build with Maven
+        run: mvn -B clean package --file java/pom.xml
+Note: --file java/pom.xml is required because your pom.xml is inside java/ folder.
+Save → Ctrl+O → Enter → Ctrl+X
+
+Step 4 — Push Everything to GitHub
+git init
+git add .
+git commit -m "Added Java CI workflow with clean package"
+git branch -M main
+git remote add origin https://github.com/<username>/<repo>.git
+git push -u origin main
+Replace <username> and <repo> with your GitHub username and repository name.
+
+Step 5 — Result / Expected Output
+Go to GitHub repo → Actions tab
+Workflow should run automatically on push
+Click workflow run → job → Console Output
+Expected Console Output:
+Run mvn -B clean package --file java/pom.xml
+[INFO] Scanning for projects...
+[INFO] Building java-demo 1.0-SNAPSHOT
+[INFO] --- maven-compiler-plugin:3.10.1:compile (default-compile) @ java-demo ---
+[INFO] BUILD SUCCESS
+BUILD SUCCESS confirms that the pipeline worked and clean package executed successfully.
+
+Step 6 — Notes for Exam
+Make sure pom.xml is present at the path you specify in workflow.
+Workflow triggers automatically on push to main branch.
+GitHub Actions workflow is specifically required for this question.
+
+________________________________________
+Q2. Consider a given Java project and create a GitHub pipeline to run JUnit tests.
+Step 1 — Create the Java Project
+# Create project folder
+mkdir java-junit
+cd java-junit
+
+# Create project structure
+mkdir -p src/main/java/com/example
+mkdir -p src/test/java/com/example
+
+Create Main.java:
+src/main/java/com/example/Main.java
+package com.example;
+
+public class Main {
+    public static int add(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        System.out.println("Hello, GitHub Actions Java CI!");
+    }
+}
+
+Create MainTest.java (JUnit 5):
+src/test/java/com/example/MainTest.java
+package com.example;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+public class MainTest {
+
+    @Test
+    public void testAdd() {
+        assertEquals(5, Main.add(2, 3));
+    }
+}
+________________________________________
+Create pom.xml (Maven project):
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>java-junit-demo</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.9.3</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <source>17</source>
+          <target>17</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M9</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
+Step 2 — Create GitHub Actions workflow
+# Create workflow folder
+mkdir -p .github/workflows
+nano .github/workflows/java-junit.yml
+Paste workflow YAML:
+name: Java CI with JUnit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build with Maven
+        run: mvn -B clean package
+
+      - name: Run JUnit Tests
+        run: mvn test
+Save & exit.
+
+Step 3 — Push to GitHub (using PAT)
+Create a GitHub repo java-junit-demo manually.
+Generate Personal Access Token (PAT) with repo scope.
+Push from Codespaces terminal:
+git remote remove origin
+git remote add origin https://skfatima26: pat@github.com/skfatima26/java-junit-demo.git
+git branch -M main
+git push -u origin main
+Expected Output:
+Enumerating objects: 39, done.
+Counting objects: 100% (39/39), done.
+Delta compression using up to 2 threads
+Compressing objects: 100% (18/18), done.
+Writing objects: 100% (39/39), 5.11 KiB | 747.00 KiB/s, done.
+Total 39 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+To https://github.com/skfatima26/java-junit-demo.git
+ * [new branch]      main -> main
+branch 'main' set up to track 'origin/main'.
+
+Step 4 — Verify Workflow Run
+Go to GitHub repo → Actions tab.
+Open “Java CI with JUnit” workflow → BUILD SUCCESS 
+________________________________________
+Q3. Consider a given Java project and create a GitHub pipeline to run JUnit tests and generate reports.
+Step 1: Project Setup
+# Create Java project folder
+mkdir java-junit
+cd java-junit
+
+# Create project structure
+mkdir -p src/main/java/com/example
+mkdir -p src/test/java/com/example
+
+Create Main.java:
+src/main/java/com/example/Main.java
+package com.example;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, GitHub Actions Java CI!");
+    }
+}
+
+Create MainTest.java:
+src/test/java/com/example/MainTest.java
+package com.example;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class MainTest {
+
+    @Test
+    public void testAddition() {
+        int a = 5, b = 3;
+        assertEquals(8, a + b);
+    }
+}
+
+Create pom.xml:
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>java-junit-demo</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <dependencies>
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-api</artifactId>
+          <version>5.10.0</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-engine</artifactId>
+          <version>5.10.0</version>
+          <scope>test</scope>
+      </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <source>17</source>
+          <target>17</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.1.2</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
+Step 2: Push Project to GitHub
+git init
+git add .
+git commit -m "Initial commit with Java project and JUnit test"
+git branch -M main
+git remote add origin https://github.com/skfatima26/java-junit-demo.git
+git push -u origin main
+Ensure the repo exists on GitHub before pushing.
+
+Step 3: Create GitHub Actions Workflow
+# Create workflow folder
+mkdir -p .github/workflows
+nano .github/workflows/java-junit-report.yml
+
+name: Java CI with JUnit Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build with Maven
+        run: mvn -B clean package
+
+      - name: Run JUnit Tests
+        run: mvn test
+
+      - name: "Debug: List JUnit reports"
+        run: ls -l target/surefire-reports/
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-reports
+          path: target/surefire-reports/
+
+Commit & push workflow:
+git add .github/workflows/java-junit-report.yml
+git commit -m "Add GitHub Actions workflow for JUnit tests"
+git push origin main
+
+Step 4: Verify Workflow Run
+Go to GitHub → Actions tab → click latest workflow
+Observe build status and logs
+
+Step 5: Codespace Commands & Output Verification
+Step 1 – Navigate to project folder
+@skfatima26 ➜ ~ $ cd devops-practice/java-junit
+@skfatima26 ➜ java-junit (main) $
+Step 2 – Verify project structure
+@skfatima26 ➜ java-junit (main) $ tree
+.
+├── pom.xml
+├── src
+│   ├── main/java/com/example/Main.java
+│   └── test/java/com/example/MainTest.java
+└── target
+    ├── classes/com/example/Main.class
+    ├── surefire-reports/TEST-com.example.MainTest.xml
+    └── surefire-reports/com.example.MainTest.txt
+Shows Java source files, test files, compiled classes, and JUnit reports.
+
+Step 3 – Git commit & push workflow
+@skfatima26 ➜ java-junit (main) $ git add .github/workflows/java-junit-report.yml
+@skfatima26 ➜ java-junit (main) $ git commit -m "Update upload-artifact to v4 for Q3"
+[main 89cd0ff] Update upload-artifact to v4 for Q3
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+@skfatima26 ➜ java-junit (main) $ git push origin main
+Confirms workflow YAML updated and pushed.
+
+Step 4 – Check JUnit test reports locally
+@skfatima26 ➜ java-junit (main) $ ls target/surefire-reports
+TEST-com.example.MainTest.xml  com.example.MainTest.txt
+Confirms JUnit test reports exist before workflow upload.
+
+Step 6 – Trigger Workflow Manually
+@skfatima26 ➜ java-junit (main) $ gh workflow run "Java CI with JUnit Report"
+Workflow run triggered for branch main
+
+Step 7 – Verify Artifacts on GitHub
+GitHub → Actions → Workflow run → Artifacts
+ You will see the JUnit report artifact (junit-reports.zip) generated successfully.
+________________________________________
+Jenkins Setup :
+
+@skfatima26 ➜ /workspaces/devops-practice (feature-branch) $
+ sudo apt install openjdk-11-jdk -y
+Reading package lists... Done
+openjdk-11-jdk is already the newest version (11.0.28+6-1ubuntu1~24.04.1).
+
+@skfatima26 ➜ /workspaces/devops-practice (feature-branch) $ java -version
+openjdk version "21.0.7" 2025-04-15 LTS
+OpenJDK Runtime Environment Microsoft-11369942 (build 21.0.7+6-LTS)
+OpenJDK 64-Bit Server VM Microsoft-11369942 (build 21.0.7+6-LTS, mixed mode, sharing)
+
+@skfatima26 ➜ /workspaces/devops-practice (feature-branch) $
+ curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+@skfatima26 ➜ /workspaces/devops-practice (feature-branch) $ 
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+@skfatima26 ➜ /workspaces/devops-practice (feature-branch) $ 
+sudo apt update
+sudo apt install jenkins -y
+Reading package lists... Done
+Created symlink /etc/systemd/system/multi-user.target.wants/jenkins.service → /usr/lib/systemd/system/jenkins.service.
+
+@skfatima26 ➜ /workspaces/devops-practice (feature-branch) $ 
+sudo nano /etc/default/jenkins
+
+@skfatima26 ➜ /workspaces/devops-practice (feature-branch) $ 
+sudo service jenkins status
+ * jenkins is running
+
+@skfatima26 ➜ /workspaces/devops-practice (feature-branch) $ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+804d6d34112b42b59134e41336227bf5
+
+________________________________________
+Q4. Consider a given Node.js project and create a GitHub/Jenkins pipeline to demonstrate cloning to workspace.
+Step 1: Prepare Node.js Project
+1. Codespaces me terminal open karo
+
+2. Project directory create karo
+mkdir -p ~/devops-practice/nodejs-demo
+cd ~/devops-practice/nodejs-demo
+
+3. Node.js project initialize karo
+npm init -y
+
+4. Source folder aur main file create karo
+mkdir src
+nano src/index.js
+index.js 
+console.log("Hello Node.js GitHub Actions!");
+
+5. Git initialize karo aur initial commit karo
+git init
+git add .
+git commit -m "Initial commit: Node.js project for cloning workflow"
+
+Step 2: Push Project to GitHub
+GitHub pe ek new repository banao: nodejs-demo
+Remote add karo aur push karo (GitHub token authentication use kar sakti ho):
+git remote add origin https://<GITHUB_TOKEN>@github.com/skfatima26/nodejs-demo.git
+git branch -M main
+git push -u origin main
+successfully pushed Project on  GitHub 
+
+Step 3: Create Jenkins Pipeline Job
+Jenkins Dashboard → New Item click karo
+Name: Nodejs_Clone_Workspace
+Type: Pipeline
+Click OK
+
+Step 4: Configure Pipeline
+Pipeline section me jao
+Definition: select “Pipeline script”
+Paste on Script box  
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/skfatima26/nodejs-demo.git'
+            }
+        }
+
+        stage('List Workspace Files') {
+            steps {
+                sh 'ls -l'
+            }
+        }
+    }
+}
+Click Save
+Notes:
+“General” aur “Triggers” me koi changes nahi karne
+“Advanced” section ignore karna
+
+Step 5: Run Pipeline
+Jenkins dashboard me job select karo: Nodejs_Clone_Workspace
+Click Build Now
+“Build History” me new build dikhega  (success = blue/green)
+Build pe click → Console Output → verify karo:
+Cloning into 'nodejs-demo'...
+remote: ...
+Checking out files: ...
+-rw-r--r-- 1 codespace codespace  123 Oct 5 10:00 package.json
+-rw-r--r-- 1 codespace codespace   45 Oct 5 10:00 src/index.js
+ GitHub repo clone successfully in Jenkins workspace
+
+Q5. Consider a given Node.js project and create a GitHub/Jenkins pipeline to install dependencies.
+Step 1: Node.js Project Setup in Codespace
+(venv) @skfatima26 ➜ /workspaces/devops-practice (main) $ mkdir -p nodejs-demo
+(venv) @skfatima26 ➜ /workspaces/devops-practice (main) $ cd nodejs-demo
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ npm init -y
+Wrote to /workspaces/devops-practice/nodejs-demo/package.json
+ package.json file created with default values.
+
+Create source folder & file:
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ mkdir src
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ nano src/index.js
+Inside index.js:
+console.log("Hello Node.js Project");
+
+Install Express dependency:
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ npm install express --save
+added 68 packages in 3s
+16 packages are looking for funding
+└─ express@4.18.2
+
+Verify Node and npm:
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ node -v
+v22.17.0
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ npm -v
+9.8.1
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ which node
+/home/codespace/nvm/current/bin/node
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ which npm
+/home/codespace/nvm/current/bin/npm
+
+Push project to GitHub:
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ git init
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ git add .
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ git commit -m "Initial Node.js project with express"
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ git branch -M main
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ git remote add origin https://<PAT>@github.com/skfatima26/nodejs-demo.git
+(venv) @skfatima26 ➜ /workspaces/devops-practice/nodejs-demo (main) $ git push -u origin main
+
+Step 2: Jenkins Global Tool Setup
+Open Jenkins → Manage Jenkins → Global Tool Configuration
+Under Git:
+Ensure Git is installed → Name: Default
+Under NodeJS:
+Name → NodeJS 24
+Version → 24.9.0
+Check Install automatically
+This ensures Jenkins can execute npm commands from pipeline.
+
+Step 3: Create Jenkins Pipeline Job
+Jenkins Dashboard → New Item
+Name → Nodejs_Install_Dependencies
+Type → Pipeline
+Definition → Pipeline Script
+Paste below 
+pipeline {
+    agent any
+    tools {
+        nodejs 'NodeJS 24'
+    }
+    stages {
+        stage('Clone Node.js Repo') {
+            steps {
+                git branch: 'main', url: 'https://github.com/skfatima26/nodejs-demo.git'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('List Installed Modules') {
+            steps {
+                sh 'npm list'
+            }
+        }
+    }
+}
+Step 4: Run Pipeline
+Go to Nodejs_Install_Dependencies job
+Click Build Now
+
+________________________________________
+Q6. Consider a given Node.js project and create a GitHub/Jenkins pipeline to start the application.
+Step 1: Setup Node.js Project in Codespace
+Open your Codespace terminal
+cd ~/devops-practice
+mkdir nodejs-demo
+cd nodejs-demo
+Initialize Node.js project
+npm init -y
+Install Express
+npm install express --save
+Create the project structure
+mkdir src
+touch src/index.js
+Edit src/index.js
+const express = require('express');
+const app = express();
+const PORT = 3000;
+app.get('/', (req, res) => {
+    res.send('Node.js App Running via Jenkins Pipeline!');
+    });
+app.listen(PORT, () => {
+ console.log(`Server running on http://localhost:${PORT}`);
+});
+Add all files and push to GitHub
+git add .
+git commit -m "Node.js demo app with express"
+git push origin  main
+
+Check on GitHub: Your repo should now contain:
+nodejs-demo/
+ ├── package.json
+ ├── package-lock.json
+ ├── src/
+ │   └── index.js
+
+Step 2: Setup NodeJS Plugin in Jenkins
+Open Jenkins → Manage Jenkins → Manage Plugins
+Go to the Available tab
+Search for NodeJS Plugin
+Click Install without restart
+Once installed, go to:
+Manage Jenkins → Global Tool Configuration
+Scroll to NodeJS installations
+Click Add NodeJS
+Set:
+Name: NodeJS 24
+Check Install automatically
+Select version: 24.9.0
+Click Save
+ This makes Jenkins automatically download Node.js v24.9.0 when running pipelines.
+
+ Step 3: Create a Jenkins Pipeline Job
+Jenkins Dashboard → New Item →
+Enter: Nodejs_Start_App
+Choose Pipeline
+Click OK
+Configure SCM (Source Code Management):
+Definition: Pipeline script from SCM
+SCM: Git
+Repository URL:
+https://github.com/skfatima26/nodejs-demo.git
+Branch:
+main
+Script Path:
+Jenkinsfile
+Click Save
+
+ Step 4: Add Jenkinsfile in Your Project
+In your Codespace, create a Jenkinsfile in the root of your repo:
+touch Jenkinsfile
+pipeline {
+    agent any
+    tools {
+        nodejs 'NodeJS 24' // name must match Global Tool config
+    }
+    stages {
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('List Modules') {
+            steps {
+                sh 'npm list'
+            }
+        }
+        stage('Start Application') {
+            steps {
+                sh 'node src/index.js'
+            }
+        }
+    }
+}
+Now commit and push:
+git add Jenkinsfile
+git commit -m "Add Jenkins pipeline to start Node app"
+git push origin main
+
+🔹 Step 5: Run Jenkins Pipeline
+Go to your Jenkins Dashboard → Nodejs_Start_App
+Click Build Now
+Watch the Console Output, it should show:
+Cloning repository...
+npm install
+added 50 packages...
+node src/index.js
+Server running on http://localhost:3000
+
+
+
+
+
+
+
+
+
+
+
+
